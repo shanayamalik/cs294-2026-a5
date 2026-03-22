@@ -27,6 +27,7 @@ class Synthesizer(object):
 
     # what's the effect of running one instruction?  where does the robot end up?
     # 0=L, 1=R, 2=D, 3=U. Unit moves, clamped to grid.
+    # If movement would land on an obstacle, the robot stays put.
     def run_instr(self, x, y, instr):
         new_x = If(instr == 0,
                     If(x - 1 >= 0, x - 1, x),
@@ -38,6 +39,13 @@ class Synthesizer(object):
                  If(instr == 3,
                     If(y - 1 >= 0, y - 1, y),
                  y))
+
+        # if destination is an obstacle, stay in place
+        for (ox, oy) in self.obstacles:
+            blocked = And(new_x == ox, new_y == oy)
+            new_x = If(blocked, x, new_x)
+            new_y = If(blocked, y, new_y)
+
         return new_x, new_y
 
     # what's the effect of running the whole program?  where does the robot end up?
