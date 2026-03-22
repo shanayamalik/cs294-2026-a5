@@ -63,20 +63,24 @@ class Synthesizer(object):
             print(names.get(v, "-"))
 
     def synthesize(self):
-        num_instrs = 4  # example value. shouldn't have hard-coded num_instrs in HW!
-        instrs = self.gen_instrs(num_instrs)  # generate BVs to represent instructions
-        final_x, final_y = self.run_prog(self.start_x_coord, self.start_y_coord, instrs)
-        goal = And(final_x == self.goal_x_coord, final_y == self.goal_y_coord)  # where do we want our robot to move?
+        # iterative deepening: try increasing program lengths until a solution is found
+        num_instrs = 0
+        while True:
+            instrs = self.gen_instrs(num_instrs)  # generate BVs to represent instructions
+            final_x, final_y = self.run_prog(self.start_x_coord, self.start_y_coord, instrs)
+            goal = And(final_x == self.goal_x_coord, final_y == self.goal_y_coord)  # where do we want our robot to move?
 
-        s = Solver()
-        s.add(goal)
-        satisfiable = s.check()
+            s = Solver()
+            s.add(goal)
+            satisfiable = s.check()
 
-        if satisfiable == sat:
-            model = s.model()
-            instrs = self.instrs_in_seq(model, instrs)
-            self.print_instrs(instrs)  # print the program if we found one
-            return instrs
+            if satisfiable == sat:
+                model = s.model()
+                instrs = self.instrs_in_seq(model, instrs)
+                self.print_instrs(instrs)  # print the program if we found one
+                return instrs
+
+            num_instrs += 1
 
 def parse_obstacles(s):
     if not s or s.strip() == "":
